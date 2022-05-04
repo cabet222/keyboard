@@ -1,0 +1,50 @@
+<div class="content">
+  <div class="black">
+    <ng-container *ngFor="let item of white">
+      <div
+        *ngIf="
+          (item + 777 + yoko) % 7 === 0 ||
+          (item + 777 + yoko) % 7 === 1 ||
+          (item + 777 + yoko) % 7 === 3 ||
+          (item + 777 + yoko) % 7 === 4 ||
+          (item + 777 + yoko) % 7 === 5
+        "
+        class="black-note"
+        [id]="'2-' + item"
+        (click)="tone(2, item)"
+        [style.left]="1 + 40 * (item + 1) - 30 / 2 + 'px'"
+      >
+        <div>
+          {{ BLACK_KEYS.charAt(item) }}
+        </div>
+      </div></ng-container
+    >
+    <table>
+      <tr>
+        <ng-container *ngFor="let item of white; let i = index">
+          <td
+            *ngIf="i !== 0"
+            class="white-note"
+            [id]="'1-' + item"
+            (click)="tone(1, item)"
+          >
+            {{ WHITE_KEYS.charAt(item) }}
+          </td>
+        </ng-container>
+      </tr>
+    </table>
+  </div>
+
+  <div class="input">
+    <span>
+      ←
+      <input type="number" [(ngModel)]="yoko" />
+      →
+    </span>
+    <span>
+      ↓
+      <input type="number" [(ngModel)]="key" />
+      ↑
+    </span>
+  </div>
+</div>
