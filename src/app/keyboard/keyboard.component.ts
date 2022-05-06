@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { delay, fromEvent, Observable, of } from 'rxjs';
 import * as Tone from 'tone';
+import { Synth } from '../Synth';
 
 @Component({
   selector: 'app-keyboard',
@@ -17,62 +18,103 @@ export class KeyboardComponent implements OnInit {
   public yoko: number = -1;
   public key: number = 4;
 
+  private synths: Synth[] = [];
+
   ngOnInit(): void {
     fromEvent(document, 'keydown').subscribe((e: any) => {
-      let div: HTMLElement | null;
       if (e.key == 'ArrowUp') {
         this.key++;
-        return;
+        // 音終了
+        this.synths.forEach((v) => v.synth.triggerRelease('+0'));
+        // 配列を初期化
+        this.synths = [];
       } else if (e.key == 'ArrowDown') {
         this.key--;
-        return;
+        // 音終了
+        this.synths.forEach((v) => v.synth.triggerRelease('+0'));
+        // 配列を初期化
+        this.synths = [];
       } else if (e.key == 'ArrowRight') {
         this.yoko++;
-        return;
+        // 音終了
+        this.synths.forEach((v) => v.synth.triggerRelease('+0'));
+        // 配列を初期化
+        this.synths = [];
       } else if (e.key == 'ArrowLeft') {
         this.yoko--;
-        return;
-      } else if (this.WHITE_KEYS.indexOf(e.key) !== -1) {
-        this.tone(1, this.WHITE_KEYS.indexOf(e.key));
-        div = document.getElementById(
-          '1-' + this.WHITE_KEYS.indexOf(e.key).toString()
-        );
-      } else if (this.BLACK_KEYS.indexOf(e.key) !== -1) {
-        div = document.getElementById(
-          '2-' + this.BLACK_KEYS.indexOf(e.key).toString()
-        );
-        if (div) {
-          this.tone(2, this.BLACK_KEYS.indexOf(e.key));
-        }
-      } else {
-        return;
+        // 音終了
+        this.synths.forEach((v) => v.synth.triggerRelease('+0'));
+        // 配列を初期化
+        this.synths = [];
+      } else if (
+        this.WHITE_KEYS.indexOf(e.key) !== -1 ||
+        this.BLACK_KEYS.indexOf(e.key) !== -1
+      ) {
+        this.tone(e.key);
       }
-      if (div) {
-        this.changeColor(div).subscribe((_) => {
-          if (div!.id.substring(0, 1) === '1') {
-            div!.style.backgroundColor = 'white';
-          } else {
-            div!.style.backgroundColor = 'black';
-          }
-        });
+    });
+    fromEvent(document, 'keyup').subscribe((e: any) => {
+      if (
+        this.WHITE_KEYS.indexOf(e.key) !== -1 ||
+        this.BLACK_KEYS.indexOf(e.key) !== -1
+      ) {
+        this.tone(e.key, false);
       }
     });
   }
 
-  private changeColor(div: any): Observable<string[]> {
-    div.style.backgroundColor = 'lightblue';
-    return of(['hoge', 'hige']).pipe(delay(500));
-  }
+  public tone(keyCode: string, flg: boolean = true): void {
+    let isWhite: boolean;
+    let index: number;
+    let div;
 
-  public tone(type: number, index: number): void {
-    const synth = new Tone.Synth().toDestination();
+    if (this.WHITE_KEYS.indexOf(keyCode) !== -1) {
+      // 白鍵の場合
+      isWhite = true;
+      index = this.WHITE_KEYS.indexOf(keyCode);
+      div = document.getElementById('1-' + index.toString());
+    } else if (this.BLACK_KEYS.indexOf(keyCode) !== -1) {
+      // 黒鍵の場合
+      isWhite = false;
+      index = this.BLACK_KEYS.indexOf(keyCode);
+      div = document.getElementById('2-' + index.toString());
+      if (!div) {
+        return;
+      }
+    } else {
+      return;
+    }
 
     let note: string = `${'CDEFGAB'.charAt((index + 777 + this.yoko) % 7)}${
-      type === 2 ? '#' : ''
+      isWhite ? '' : '#'
     }${Math.floor((index + this.yoko) / 7) + this.key}`;
 
-    console.log(`${index} ${note}`);
+    if (this.synths.filter((v: any) => v.note === note).length === 0) {
+      this.synths.push({ note: note, synth: new Tone.Synth().toDestination() });
+    } else if (flg) {
+      return;
+    }
 
-    synth.triggerAttackRelease(note, '8n');
+    const synth = this.synths.filter((v: any) => v.note === note)[0].synth;
+
+    console.log(`${index} ${note} ${flg ? '→' : '←'}`);
+
+    if (flg) {
+      // 音開始
+      synth.triggerAttack(note, '0');
+      // 鍵盤の色を変更
+      div!.style.backgroundColor = 'lightblue';
+    } else {
+      // 音終了
+      synth.triggerRelease('+0');
+      // 鍵盤の色をもとに戻す
+      if (div!.id.substring(0, 1) === '1') {
+        div!.style.backgroundColor = 'white';
+      } else {
+        div!.style.backgroundColor = 'black';
+      }
+      // 配列から該当の音を削除
+      this.synths = this.synths.filter((v: any) => v.note !== note);
+    }
   }
 }

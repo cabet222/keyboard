@@ -11,7 +11,8 @@
         "
         class="black-note"
         [id]="'2-' + item"
-        (click)="tone(2, item)"
+        (mousedown)="tone(BLACK_KEYS.charAt(item))"
+        (mouseup)="tone(BLACK_KEYS.charAt(item), false)"
         [style.left]="1 + 40 * (item + 1) - 30 / 2 + 'px'"
       >
         <div>
@@ -26,7 +27,8 @@
             *ngIf="i !== 0"
             class="white-note"
             [id]="'1-' + item"
-            (click)="tone(1, item)"
+            (mousedown)="tone(WHITE_KEYS.charAt(item))"
+            (mouseup)="tone(WHITE_KEYS.charAt(item), false)"
           >
             {{ WHITE_KEYS.charAt(item) }}
           </td>
