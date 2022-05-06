@@ -22,6 +22,9 @@ export class KeyboardComponent implements OnInit {
 
   ngOnInit(): void {
     fromEvent(document, 'keydown').subscribe((e: any) => {
+      if (e.repeat) {
+        return;
+      }
       if (e.key == 'ArrowUp') {
         this.key++;
         // 音終了
@@ -91,8 +94,6 @@ export class KeyboardComponent implements OnInit {
 
     if (this.synths.filter((v: any) => v.note === note).length === 0) {
       this.synths.push({ note: note, synth: new Tone.Synth().toDestination() });
-    } else if (flg) {
-      return;
     }
 
     const synth = this.synths.filter((v: any) => v.note === note)[0].synth;
